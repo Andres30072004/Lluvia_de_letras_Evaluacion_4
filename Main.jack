@@ -1,0 +1,164 @@
+// Main.jack — Letter Rain simple en 1 archivo
+// HUD en fila 0. Letras caen en filas 1..22, columnas 0..31.
+// Tecla correcta elimina la letra más baja que coincida (Score +1).
+// Si una letra toca fondo, pierdes 1 vida. GAME OVER con 3 vidas perdidas.
+
+class Main {
+    function void main() {
+        var int score, lives;
+        var int maxLetters, numLetters;
+        var Array letters, rows, cols;   // arreglos (int) para códigos y posiciones
+        var int seed, spawnCounter, spawnPeriod;
+
+        var int i, j;        // índices
+        var int key;         // tecla actual
+        var int li, ri, ci;  // temporales: letters[i], rows[i], cols[i]
+        var int t, q, ch, c; // para “aleatorios”
+        var int best, bestRow, diff, r; // selección y auxiliares
+
+        // --- init ---
+        let score = 0;
+        let lives = 3;
+
+        let maxLetters = 26;
+        let numLetters = 0;
+
+        let letters = Array.new(maxLetters);
+        let rows    = Array.new(maxLetters);
+        let cols    = Array.new(maxLetters);
+
+        let seed = 1234;
+        let spawnPeriod = 2;
+        let spawnCounter = 0;
+
+        do Screen.clearScreen();
+        do Output.moveCursor(0, 0);
+        do Output.printString("Score: 0  Lives: 3 ");
+
+        // --- loop ---
+        while (lives > 0) {
+
+            // teclado -> eliminar letra coincidente más baja
+            let key = Keyboard.keyPressed();
+            if (~(key = 0)) {
+                // convertir mayúsculas (65-90) a minúsculas (97-122)
+                if ((key > 64) & (key < 91)) {
+                    let key = key + 32;
+                }
+
+                let best = -1;
+                let bestRow = -1;
+
+                let i = 0;
+                while (i < numLetters) {
+                    let li = letters[i];
+                    let ri = rows[i];
+                    let diff = li - key;         // evita 'if (li = key)'
+                    if (diff = 0) {
+                        if (ri > bestRow) {
+                            let bestRow = ri;
+                            let best = i;
+                        }
+                    }
+                    let i = i + 1;
+                }
+
+                if (~(best < 0)) {
+                    let r = rows[best];
+                    let ci = cols[best];
+                    do Output.moveCursor(r, ci);
+                    do Output.printChar(32);
+
+                    let j = best;
+                    while (j < (numLetters - 1)) {
+                        let letters[j] = letters[j + 1];
+                        let rows[j]    = rows[j + 1];
+                        let cols[j]    = cols[j + 1];
+                        let j = j + 1;
+                    }
+                    let numLetters = numLetters - 1;
+
+                    let score = score + 1;
+                    do Output.moveCursor(0, 0);
+                    do Output.printString("Score: ");
+                    do Output.printInt(score);
+                    do Output.printString("  Lives: ");
+                    do Output.printInt(lives);
+                    do Output.printChar(32);
+                }
+            }
+
+            // caída: borrar, bajar, redibujar / o eliminar si toca fondo
+            let i = 0;
+            while (i < numLetters) {
+                let r  = rows[i];
+                let ci = cols[i];
+                do Output.moveCursor(r, ci);
+                do Output.printChar(32);
+
+                let rows[i] = r + 1;
+                let r = rows[i];
+
+                if (r > 22) {
+                    let j = i;
+                    while (j < (numLetters - 1)) {
+                        let letters[j] = letters[j + 1];
+                        let rows[j]    = rows[j + 1];
+                        let cols[j]    = cols[j + 1];
+                        let j = j + 1;
+                    }
+                    let numLetters = numLetters - 1;
+
+                    let lives = lives - 1;
+                    do Output.moveCursor(0, 0);
+                    do Output.printString("Score: ");
+                    do Output.printInt(score);
+                    do Output.printString("  Lives: ");
+                    do Output.printInt(lives);
+                    do Output.printChar(32);
+                } else {
+                    let ch = letters[i];
+                    do Output.moveCursor(r, ci);
+                    do Output.printChar(ch);
+                    let i = i + 1;
+                }
+            }
+
+            // spawnear
+            if (spawnCounter < 1) {
+                if (numLetters < maxLetters) {
+                    let seed = seed + 7;
+                    let t = seed;
+                    let q = Math.divide(t, 26);
+                    let ch = 97 + (t - (q * 26));  // 'a'..'z'
+
+                    let seed = seed + 11;
+                    let t = seed;
+                    let q = Math.divide(t, 32);
+                    let c = t - (q * 32);         // col 0..31
+
+                    let letters[numLetters] = ch;
+                    let rows[numLetters]    = 1;
+                    let cols[numLetters]    = c;
+
+                    do Output.moveCursor(1, c);
+                    do Output.printChar(ch);
+
+                    let numLetters = numLetters + 1;
+                }
+                let spawnCounter = spawnPeriod;
+            } else {
+                let spawnCounter = spawnCounter - 1;
+            }
+
+            // velocidad
+            do Sys.wait(30);
+        }
+
+        // fin
+        do Output.moveCursor(10, 8);
+        do Output.printString("GAME OVER - Score: ");
+        do Output.printInt(score);
+        return;
+    }
+}
