@@ -191,3 +191,10 @@ El juego se diseñó siguiendo:
 Proyecto desarrollado por **Andrés D. Echeverri B. y Felipe Agudelo Posada**  
 Evaluación Nº 4 – Organización de Computadores  
 Universidad EAFIT
+
+---
+
+## 🎥 Video de Demostración
+Mira aquí la ejecución completa del juego:
+
+👉 
